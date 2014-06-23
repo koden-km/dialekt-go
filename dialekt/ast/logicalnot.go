@@ -12,7 +12,7 @@ func NewLogicalNot(child ExpressionInterface) *LogicalNot {
 }
 
 // Fetch the expression being inverted by the NOT operator.
-func (lnot *LogicalNot) Child() child ExpressionInterface {
+func (lnot *LogicalNot) Child() ExpressionInterface {
 	return lnot.child
 }
 
