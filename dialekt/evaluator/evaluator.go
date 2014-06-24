@@ -37,8 +37,33 @@ func (ev *Evaluator) Evaluate(expression ExpressionInterface, tags []string) (re
 
 // Visit a LogicalAnd node.
 // The result will be returned.
-func (ev *Evaluator) VisitLogicalAnd(node LogicalAnd) (result interface{}) {
-	// TODO
+func (ev *Evaluator) VisitLogicalAnd(node LogicalAnd) (interface{}) {
+	matchedTags := make(map[string]string)
+	isMatch := false
+
+	for n := range node.Children() {
+		result := n.Accept(ev)
+
+		if (!result.IsMatch()) {
+			isMatch = false;
+		}
+
+		for tag := range result.MatchedTags() {
+			matchedTags[tag] = true
+		}
+
+		// TODO: how to port these?
+
+        // $matchedTags = array_keys($matchedTags);
+
+		// XXXXX = array_values(
+		// 	array_diff($this->tags, $matchedTags)
+		// )
+
+		append(ev.expressionResults, NewExpressionResult(node, isMatch, matchedTags, XXXXXX);
+
+		return ev.expressionResults
+	}
 }
 
 // Visit a LogicalOr node.
