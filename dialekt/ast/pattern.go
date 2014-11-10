@@ -2,6 +2,7 @@ package dialekt
 
 // An AST node that represents a pattern-match expression.
 type Pattern struct {
+	AbstractExpression
 	ExpressionInterface
 
 	// Pattern literals or placeholders.
@@ -15,7 +16,7 @@ func NewPattern(children ...PatternChildInterface) *Pattern {
 
 // Add a child to this node.
 func (pat *Pattern) Add(child PatternChildInterface) {
-	append(pat.children, expression)
+	append(pat.children, child)
 }
 
 // Fetch a slice of this node's children.

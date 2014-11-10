@@ -5,8 +5,12 @@ type PatternWildcard struct {
 	PatternChildInterface
 }
 
+func NewPatternWildcard() {
+	return &PatternWildcard{}
+}
+
 // Pass this node to the appropriate method on the given visitor.
 // The visitation result will be returned.
 func (wild *PatternWildcard) Accept(visitor VisitorInterface) (result interface{}) {
-	return visitor.VisitPattern(wild)
+	return visitor.VisitPatternWildcard(wild)
 }

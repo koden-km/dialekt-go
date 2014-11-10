@@ -2,6 +2,6 @@
 package dialekt
 
 const (
-	NAME    = "Dialekt"
-	VERSION = "0.1.0"
+	PACKAGE_NAME    = "Dialekt"
+	PACKAGE_VERSION = "0.1.0"
 )

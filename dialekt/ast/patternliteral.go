@@ -5,21 +5,21 @@ type PatternLiteral struct {
 	PatternChildInterface
 
 	// The string to match.
-	string string
+	matchString string
 }
 
-// Zero or more pattern literals or placeholders.
-func NewPatternLiteral(string string) *PatternLiteral {
-	return &PatternLiteral{string}
+// The string to match.
+func NewPatternLiteral(matchString string) *PatternLiteral {
+	return &PatternLiteral{matchString}
 }
 
 // Fetch the string to be matched.
-func (lit *PatternLiteral) String() []PatternChildInterface {
-	return lit.string
+func (plit *PatternLiteral) String() []PatternChildInterface {
+	return plit.matchString
 }
 
 // Pass this node to the appropriate method on the given visitor.
 // The visitation result will be returned.
-func (lit *PatternLiteral) Accept(visitor VisitorInterface) (result interface{}) {
-	return visitor.VisitPattern(lit)
+func (plit *PatternLiteral) Accept(visitor VisitorInterface) (result interface{}) {
+	return visitor.VisitPatternLiteral(plit)
 }

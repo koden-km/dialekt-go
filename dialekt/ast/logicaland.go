@@ -2,7 +2,7 @@ package dialekt
 
 // An AST node that represents the logical AND operator.
 type LogicalAnd struct {
-	AbstractPolyadicOperator
+	AbstractPolyadicExpression
 }
 
 func NewLogicalAnd() *LogicalAnd {

@@ -2,7 +2,8 @@ package dialekt
 
 // An AST node that represents the logical NOT operator.
 type LogicalNot struct {
-	// The expression being inverted by the NOT operator.
+	AbstractExpression
+
 	child ExpressionInterface
 }
 
@@ -19,5 +20,5 @@ func (lnot *LogicalNot) Child() ExpressionInterface {
 // Pass this node to the appropriate method on the given visitor.
 // The visitation result will be returned.
 func (lnot *LogicalNot) Accept(visitor VisitorInterface) (result interface{}) {
-	return visitor.VisitLogicalAnd(lnot)
+	return visitor.VisitLogicalNot(lnot)
 }
