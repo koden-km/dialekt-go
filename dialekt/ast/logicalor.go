@@ -2,7 +2,7 @@ package dialekt
 
 // An AST node that represents the logical NOT operator.
 type LogicalOr struct {
-	AbstractPolyadicExpression
+	*AbstractPolyadicExpression
 }
 
 // The child expression being inverted by the NOT operator.

@@ -25,7 +25,7 @@ func NewEvaluator(caseSensitive, emptyIsWildcard bool) *Evaluator {
 // Return the result of the evaluation.
 func (ev *Evaluator) Evaluate(expression ExpressionInterface, tags []string) (result *EvaluationResult) {
 	ev.tags = tags
-	ev.expressionResults = []ExpressionResult(nil)
+	ev.expressionResults = make([]ExpressionResult)
 
 	result = NewEvaluationResult(expression.Accept(ev).IsMatch(), ev.expressionResults)
 
@@ -37,8 +37,9 @@ func (ev *Evaluator) Evaluate(expression ExpressionInterface, tags []string) (re
 
 // Visit a LogicalAnd node.
 // The result will be returned.
-func (ev *Evaluator) VisitLogicalAnd(node LogicalAnd) (interface{}) {
+func (ev *Evaluator) VisitLogicalAnd(node *LogicalAnd) (interface{}) {
 	matchedTags := make(map[string]string)
+	unmatchedTags := make(map[string]string)
 	isMatch := false
 
 	for n := range node.Children() {
@@ -60,7 +61,7 @@ func (ev *Evaluator) VisitLogicalAnd(node LogicalAnd) (interface{}) {
 		// 	array_diff($this->tags, $matchedTags)
 		// )
 
-		append(ev.expressionResults, NewExpressionResult(node, isMatch, matchedTags, XXXXXX);
+		append(ev.expressionResults, NewExpressionResult(node, isMatch, matchedTags, unmatchedTags);
 
 		return ev.expressionResults
 	}

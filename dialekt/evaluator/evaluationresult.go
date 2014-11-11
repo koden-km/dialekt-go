@@ -24,6 +24,6 @@ func (evr *EvaluationResult) IsMatch() bool {
 // Fetch the result for an individual expression node from the AST.
 // The expression for which the result is fetched.
 // Returns the result for the given expression or an error if there is no result for the given expression.
-func (evr *EvaluationResult) ResultOf(expression ExpressionInterface) (result ExpressionResult, error UnexpectedValueError) {
+func (evr *EvaluationResult) ResultOf(expression ExpressionInterface) (result ExpressionResult, unexpectedValueError error) {
 	return evr.expressionResults[expression]
 }

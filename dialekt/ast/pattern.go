@@ -2,8 +2,9 @@ package dialekt
 
 // An AST node that represents a pattern-match expression.
 type Pattern struct {
-	AbstractExpression
 	ExpressionInterface
+
+	*AbstractExpression
 
 	// Pattern literals or placeholders.
 	children []PatternChildInterface

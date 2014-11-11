@@ -2,8 +2,9 @@ package dialekt
 
 // An AST node that represents a literal tag expression.
 type Tag struct {
-	AbstractExpression
 	ExpressionInterface
+
+	*AbstractExpression
 
 	// The tag name.
 	name string

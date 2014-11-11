@@ -7,11 +7,11 @@ type ExpressionInterface interface {
 	NodeInterface
 
 	// Fetch the first token from the source that is part of this expression.
-	FirstToken() Token
+	FirstToken() *Token
 
 	// Fetch the last token from the source that is part of this expression.
-	LastToken() Token
+	LastToken() *Token
 
 	// Set the delimiting tokens for this expression.
-	SetTokens(firstToken, lastToken Token)
+	SetTokens(firstToken, lastToken *Token)
 }

@@ -2,7 +2,7 @@ package dialekt
 
 // A base class providing common functionality for polyadic operators.
 type AbstractPolyadicExpression struct {
-	AbstractExpression
+	*AbstractExpression
 
 	children []ExpressionInterface
 }
