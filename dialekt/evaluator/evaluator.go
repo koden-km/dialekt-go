@@ -1,5 +1,7 @@
 package dialekt
 
+// import "github.com/deckarep/golang-set"
+
 // Evaluate an expression against a set of tags.
 type Evaluator struct {
 	// True if tag matching should be case-sensitive; otherwise, false.
@@ -37,78 +39,174 @@ func (ev *Evaluator) Evaluate(expression ExpressionInterface, tags []string) (re
 
 // Visit a LogicalAnd node.
 // The result will be returned.
-func (ev *Evaluator) VisitLogicalAnd(node *LogicalAnd) (interface{}) {
-	matchedTags := make(map[string]string)
-	unmatchedTags := make(map[string]string)
+func (ev *Evaluator) VisitLogicalAnd(node *LogicalAnd) interface{} {
+	matchedTags := make([]string)
 	isMatch := false
 
 	for n := range node.Children() {
 		result := n.Accept(ev)
 
-		if (!result.IsMatch()) {
-			isMatch = false;
+		if !result.IsMatch() {
+			isMatch = false
 		}
 
-		for tag := range result.MatchedTags() {
-			matchedTags[tag] = true
-		}
-
-		// TODO: how to port these?
-
-        // $matchedTags = array_keys($matchedTags);
-
-		// XXXXX = array_values(
-		// 	array_diff($this->tags, $matchedTags)
-		// )
-
-		append(ev.expressionResults, NewExpressionResult(node, isMatch, matchedTags, unmatchedTags);
-
-		return ev.expressionResults
+		matchedTags = append(matchedTags, result.MatchedTags()...)
 	}
+
+	unmatchedTags := stringsDiff(ev.tags, matchedTags)
+
+	ev.expressionResults = append(ev.expressionResults, NewExpressionResult(node, isMatch, matchedTags, unmatchedTags))
+
+	return ev.expressionResults
 }
 
 // Visit a LogicalOr node.
 // The result will be returned.
 func (ev *Evaluator) VisitLogicalOr(node LogicalOr) (result interface{}) {
-	// TODO
+	matchedTags := make([]string)
+	isMatch := false
+
+	for n := range node.Children() {
+		result := n.Accept(ev)
+
+		if !result.IsMatch() {
+			isMatch = false
+		}
+
+		matchedTags = append(matchedTags, result.MatchedTags()...)
+	}
+
+	unmatchedTags := stringsDiff(ev.tags, matchedTags)
+
+	newExpResult := NewExpressionResult(node, isMatch, matchedTags, unmatchedTags)
+
+	ev.expressionResults = append(ev.expressionResults, newExpResult)
+
+	return ev.expressionResults
 }
 
 // Visit a LogicalNot node.
 // The result will be returned.
 func (ev *Evaluator) VisitLogicalNot(node LogicalNot) (result interface{}) {
-	// TODO
+	childResult := node.Child().Accept(ev)
+
+	newExpResult := NewExpressionResult(node, !childResult.IsMatch(), childResult.UnmatchedTags(), childResult.MatchedTags())
+
+	ev.expressionResults = append(ev.expressionResults, newExpResult)
+
+	return ev.expressionResults
 }
 
 // Visit a Tag node.
 // The result will be returned.
 func (ev *Evaluator) VisitTag(node Tag) (result interface{}) {
-	// TODO
+	if ev.caseSensitive {
+		predicate := func(tag string) bool {
+			return node.name() == tag
+		}
+
+		return ev.matchTags(node, predicate)
+	} else {
+		// TODO: compare them case insensitive
+		predicate := func(tag string) bool {
+			return node.name() == tag
+		}
+
+		return ev.matchTags(node, predicate)
+	}
 }
 
 // Visit a pattern node.
 // The result will be returned.
 func (ev *Evaluator) VisitPattern(node Pattern) (result interface{}) {
-	// TODO
+	pattern := "/^"
+
+	for n := range node.Children() {
+		pattern += n.Accept(ev)
+	}
+
+	pattern += "$/"
+
+	if !ev.caseSensitive {
+		pattern += "i"
+	}
+
+	predicate := func(tag string) bool {
+		// TODO: regex
+		return false
+	}
+
+	return ev.matchTags(node, predicate)
 }
 
 // Visit a PatternLiteral node.
 // The result will be returned.
 func (ev *Evaluator) VisitPatternLiteral(node PatternLiteral) (result interface{}) {
-	// TODO
+	// TODO: regex quote
+	return node.String()
 }
 
 // Visit a PatternWildcard node.
 // The result will be returned.
 func (ev *Evaluator) VisitPatternWildcard(node PatternWildcard) (result interface{}) {
-	// TODO
+	// TODO: regex wildcard
+	return ".*"
 }
 
 // Visit a EmptyExpression node.
 // The result will be returned.
 func (ev *Evaluator) VisitEmptyExpression(node EmptyExpression) (result interface{}) {
-	// TODO
+	otherTags := make([]string)
+
+	if ev.emptyIsWildcard {
+		newExpResult := NewExpressionResult(node, ev.emptyIsWildcard, ev.tags, otherTags)
+	} else {
+		newExpResult := NewExpressionResult(node, ev.emptyIsWildcard, otherTags, ev.tags)
+	}
+
+	ev.expressionResults = append(ev.expressionResults, newExpResult)
+
+	return ev.expressionResults
 }
 
 func (ev *Evaluator) matchTags(expression ExpressionInterface, predicate func(string) bool) []ExpressionResult {
-	// TODO
+	matchedTags := make([]string)
+	unmatchedTags := make([]string)
+
+	for tag := range ev.tags {
+		if predicate(tag) {
+			matchedTags = append(matchedTags, tag)
+		} else {
+			unmatchedTags = append(unmatchedTags, tag)
+		}
+	}
+
+	newExpResult := NewExpressionResult(expression, len(matchedTags) > 0, matchedTags, unmatchedTags)
+
+	ev.expressionResults = append(ev.expressionResults, newExpResult)
+
+	return ev.expressionResults
+}
+
+// Helper function that works like PHP array_diff()
+// TODO: remove this and use the imported golang-set third part lib?
+func stringsDiff(left, right []string) []string {
+	result := make([]string)
+
+	for l := range left {
+		addToResult := true
+
+		for r := range right {
+			if l == r {
+				addToResult = false
+				break
+			}
+		}
+
+		if addToResult {
+			result = append(result, l)
+		}
+	}
+
+	return result
 }
