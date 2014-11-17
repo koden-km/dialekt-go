@@ -17,7 +17,7 @@ func NewPattern(children ...PatternChildInterface) *Pattern {
 
 // Add a child to this node.
 func (pat *Pattern) Add(child PatternChildInterface) {
-	append(pat.children, child)
+	pat.children = append(pat.children, child)
 }
 
 // Fetch a slice of this node's children.

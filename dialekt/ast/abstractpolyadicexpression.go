@@ -14,7 +14,7 @@ func NewAbstractPolyadicOperator(children ...ExpressionInterface) *AbstractPolya
 
 // Add a child expression to this operator.
 func (po *AbstractPolyadicExpression) Add(expression ExpressionInterface) {
-	append(po.children, expression)
+	po.children = append(po.children, expression)
 }
 
 // Fetch a slice of this operator's children.
