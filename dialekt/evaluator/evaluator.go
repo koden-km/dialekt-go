@@ -1,6 +1,9 @@
 package dialekt
 
-// import "github.com/deckarep/golang-set"
+import (
+	"regexp"
+	"strings"
+)
 
 // Evaluate an expression against a set of tags.
 type Evaluator struct {
@@ -107,9 +110,8 @@ func (ev *Evaluator) VisitTag(node Tag) (result interface{}) {
 
 		return ev.matchTags(node, predicate)
 	} else {
-		// TODO: compare them case insensitive
 		predicate := func(tag string) bool {
-			return node.name() == tag
+			return strings.ToLower(node.name()) == strings.ToLower(tag)
 		}
 
 		return ev.matchTags(node, predicate)
@@ -132,8 +134,8 @@ func (ev *Evaluator) VisitPattern(node Pattern) (result interface{}) {
 	}
 
 	predicate := func(tag string) bool {
-		// TODO: regex
-		return false
+		matched, err := regex.MatchString(pattern, tag)
+		return matched
 	}
 
 	return ev.matchTags(node, predicate)
@@ -142,14 +144,12 @@ func (ev *Evaluator) VisitPattern(node Pattern) (result interface{}) {
 // Visit a PatternLiteral node.
 // The result will be returned.
 func (ev *Evaluator) VisitPatternLiteral(node PatternLiteral) (result interface{}) {
-	// TODO: regex quote
-	return node.String()
+	return regexp.QuoteMeta(node.String)
 }
 
 // Visit a PatternWildcard node.
 // The result will be returned.
 func (ev *Evaluator) VisitPatternWildcard(node PatternWildcard) (result interface{}) {
-	// TODO: regex wildcard
 	return ".*"
 }
 
@@ -189,7 +189,8 @@ func (ev *Evaluator) matchTags(expression ExpressionInterface, predicate func(st
 }
 
 // Helper function that works like PHP array_diff()
-// TODO: remove this and use the imported golang-set third part lib?
+// Remove this and use the golang-set third party lib?
+// "github.com/deckarep/golang-set"
 func stringsDiff(left, right []string) []string {
 	result := make([]string)
 
