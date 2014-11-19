@@ -111,7 +111,7 @@ func (ev *Evaluator) VisitTag(node Tag) (result interface{}) {
 		return ev.matchTags(node, predicate)
 	} else {
 		predicate := func(tag string) bool {
-			return strings.ToLower(node.name()) == strings.ToLower(tag)
+			return strings.EqualFold(node.name(), tag)
 		}
 
 		return ev.matchTags(node, predicate)
