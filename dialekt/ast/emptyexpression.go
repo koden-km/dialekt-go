@@ -2,7 +2,7 @@ package dialekt
 
 // An AST node that represents an empty expression.
 type EmptyExpression struct {
-	AbstractExpression
+	*AbstractExpression
 }
 
 func NewEmptyExpression() *EmptyExpression {
