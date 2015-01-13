@@ -5,12 +5,12 @@ const TokenWildcardCharacter = "*"
 type TokenType int
 
 const (
-	TokenTypeLogicalAnd   TokenType = 1
-	TokenTypeLogicalOr    TokenType = 2
-	TokenTypeLogicalNot   TokenType = 3
-	TokenTypeString       TokenType = 4
-	TokenTypeOpenBracket  TokenType = 6
-	TokenTypeCloseBracket TokenType = 7
+	TokenTypeLogicalAnd TokenType = 1 = iota
+	TokenTypeLogicalOr
+	TokenTypeLogicalNot
+	TokenTypeString
+	TokenTypeOpenBracket
+	TokenTypeCloseBracket
 )
 
 type Token struct {
@@ -23,7 +23,14 @@ type Token struct {
 }
 
 func NewToken(tokenType TokenType, value string, startOffset, endOffset, lineNumber, columnNumber int) *Token {
-	return &Token{tokenType, value, startOffset, endOffset, lineNumber, columnNumber}
+	return &Token{
+		tokenType,
+		value,
+		startOffset,
+		endOffset,
+		lineNumber,
+		columnNumber
+	}
 }
 
 func (token *Token) String() string {
@@ -42,5 +49,5 @@ func (token *Token) String() string {
 		return "close bracket"
 	}
 
-	panic("Unknown type.")
+	panic("Unknown token type.")
 }
