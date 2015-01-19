@@ -1,5 +1,9 @@
 package dialekt
 
+import (
+	"strings"
+)
+
 type AbstractParser struct {
     wildcardString string
 	tokenStack []*Token
@@ -8,13 +12,9 @@ type AbstractParser struct {
 	previousToken *Token
 
 	currentToken *Token
-
-	// TODO: needs something like this:
-	// abstract protected function parseExpression();
-	parseExpressionFunc func() (*AbstractExpression, error)
 }
 
-func newAbstractParser() *Token {
+func newAbstractParser() *AbstractParser {
 	tokenStack := make([]*Token)
 	tokens := make([]*Token)
 
@@ -33,13 +33,8 @@ func (parser *AbstractParser) SetWildcardString(wildcardString string) string {
 	parser.wildcardString = wildcardString
 }
 
-// Parse an expression.
-//
-// @param string         $expression The expression to parse.
-// @param LexerInterface $lexer      The lexer to use to tokenise the string, or nil to use the default.
-//
-// @return ExpressionInterface The parsed expression.
-// @throws ParseException      if the expression is invalid.
+// The expression to parse.
+// Returns the parsed expression or an error if the expression is invalid.
 func (parser *AbstractParser) Parse(expression string, lexer *LexerInterface) (*ExpressionInterface, error) {
 	if !lexer {
 		lexer = NewLexer()
@@ -51,11 +46,7 @@ func (parser *AbstractParser) Parse(expression string, lexer *LexerInterface) (*
 }
 
 // Parse an expression that has already beed tokenized.
-//
-// @param array<Token> The array of tokens that form the expression.
-//
-// @return ExpressionInterface The parsed expression.
-// @throws ParseException      if the expression is invalid.
+// Returns the parsed expression or an error if the expression is invalid.
 func (parser *AbstractParser) ParseTokens(tokens []*Token) (*ExpressionInterface, error) {
 	if len(tokens) == 0 {
 		return NewEmptyExpression(), nil
@@ -68,12 +59,7 @@ func (parser *AbstractParser) ParseTokens(tokens []*Token) (*ExpressionInterface
 	parser.previousToken = nil
 	parser.currentToken = tokens[0]
 
-	if !parser.parseExpressionFunc {
-		// error...
-		panic("Parser parse expression func not defined.")
-	}
-
-	var expression = parser.parseExpressionFunc()
+	var expression = parser.parseExpression()
 
 	if parser.currentToken {
 		// TODO: make a ParseError type?
@@ -83,77 +69,66 @@ func (parser *AbstractParser) ParseTokens(tokens []*Token) (*ExpressionInterface
 	return expression, nil
 }
 
+// TODO: This might need to be public/exported?
+func (parser *AbstractParser) parseExpression() *AbstractExpression {
+	panic("This method must be overridden")
+}
+
 func (parser *AbstractParser) expectToken(types ...TokenType) (bool, error) {
 	if !parser.currentToken {
 		// TODO: make a ParseError type?
 		return false, fmt.Errorf("Unexpected %s, expected %s.", parser.currentToken.TokenType, parser.formatExpectedTokenNames(types))
-// UP TO HERE
 	} else {
+		// TODO: Whats the best way to check if something is in an array?
 		for _, tokenType := range types {
-			if tokenType != parser.currentToken.TokenType {
-				// TODO: how to check if something is in an array?
-				return false, fmt.Errorf("Unexpected %s, expected %s.", parser.currentToken.TokenType, parser.formatExpectedTokenNames(types))
+			if tokenType == parser.currentToken.TokenType {
+				return true, nil
 			}
 		}
 	}
 
-	return true, nil
-
-
-
-	// $types = func_get_args();
-
-	// if (!parser.currentToken) {
-	// 	throw new ParseException(
-	// 		'Unexpected end of input, expected ' . parser.formatExpectedTokenNames($types) . '.'
-	// 	);
-	// } elseif (!in_array(parser.currentToken->type, $types)) {
-	// 	throw new ParseException(
-	// 		'Unexpected ' . Token::typeDescription(parser.currentToken->type) . ', expected ' . parser.formatExpectedTokenNames($types) . '.'
-	// 	);
-	// }
+	return false, fmt.Errorf("Unexpected %s, expected %s.", parser.currentToken.TokenType, parser.formatExpectedTokenNames(types))
 }
 
-func (parser *AbstractParser) formatExpectedTokenNames(array $types) {
-	// $types = array_map(
-	// 	'Icecave\Dialekt\Parser\Token::typeDescription',
-	// 	$types
-	// );
+func (parser *AbstractParser) formatExpectedTokenNames(types ...TokenType) string {
+	formattedTypes := make([]string, len(types))
+	for i, tokenType := range types {
+		formattedTypes[i] = tokenType.String()
+	}
 
-	// if (count($types) === 1) {
-	// 	return $types[0];
-	// }
+	if len(formattedTypes) == 1 {
+		return formattedTypes[0]
+	}
 
-	// $lastType = array_pop($types);
+	lastType := formattedTypes[len(formattedTypes) - 1]
 
-	// return implode(', ', $types) . ' or ' . $lastType;
+	return strings.Join(formattedTypes[:len(formattedTypes) - 1], ", ") + " or " + lastType;
 }
 
 func (parser *AbstractParser) nextToken() {
-	// parser.previousToken = parser.currentToken
+	parser.previousToken = parser.currentToken
 
-	// if ++parser.tokenIndex >= len(parser.tokens) {
-	// 	parser.currentToken = nil
-	// } else {
-	// 	parser.currentToken = parser.tokens[parser.tokenIndex]
-	// }
+	parser.tokenIndex++
+	if parser.tokenIndex >= len(parser.tokens) {
+		parser.currentToken = nil
+	} else {
+		parser.currentToken = parser.tokens[parser.tokenIndex]
+	}
 }
 
-/**
- * Record the start of an expression.
- */
+// Record the start of an expression.
 func (parser *AbstractParser) startExpression() {
-	// parser.tokenStack[] = parser.currentToken;
+	parser.tokenStack = append(parser.tokenStack, parser.currentToken)
 }
 
-/**
- * Record the end of an expression.
- *
- * @return ExpressionInterface
- */
-func (parser *AbstractParser) endExpression(ExpressionInterface $expression) {
-	// $expression->setTokens(
-	// 	array_pop(parser.tokenStack),
-	// 	parser.previousToken
-	// );
+// Record the end of an expression.
+func (parser *AbstractParser) endExpression(expression ExpressionInterface) {
+	length := len(parser.tokenStack)
+	lastToken = parser.tokenStack[length - 1]
+	parser.tokenStack = parser.tokenStack[:length - 1]
+
+	expression.setTokens(
+		lastToken,
+		parser.previousToken
+	)
 }
