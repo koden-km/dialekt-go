@@ -70,7 +70,9 @@ func (parser *AbstractParser) ParseTokens(tokens []*Token) (*ExpressionInterface
 }
 
 // TODO: This might need to be public/exported?
-func (parser *AbstractParser) parseExpression() *AbstractExpression {
+func (parser *AbstractParser) parseExpression() (*AbstractExpression, error) {
+	// TODO: panic or return error?
+	// return nil, error.New("This method must be overridden")
 	panic("This method must be overridden")
 }
 
@@ -79,7 +81,6 @@ func (parser *AbstractParser) expectToken(types ...TokenType) (bool, error) {
 		// TODO: make a ParseError type?
 		return false, fmt.Errorf("Unexpected %s, expected %s.", parser.currentToken.TokenType, parser.formatExpectedTokenNames(types))
 	} else {
-		// TODO: Whats the best way to check if something is in an array?
 		for _, tokenType := range types {
 			if tokenType == parser.currentToken.TokenType {
 				return true, nil
@@ -87,6 +88,7 @@ func (parser *AbstractParser) expectToken(types ...TokenType) (bool, error) {
 		}
 	}
 
+	// TODO: make a ParseError type?
 	return false, fmt.Errorf("Unexpected %s, expected %s.", parser.currentToken.TokenType, parser.formatExpectedTokenNames(types))
 }
 
