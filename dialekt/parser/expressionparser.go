@@ -1,8 +1,8 @@
 package dialekt
 
 import (
-	"strings"
 	"regex"
+	"strings"
 )
 
 type ExpressionParser struct {
@@ -13,7 +13,7 @@ type ExpressionParser struct {
 func NewExpressionParser() *ExpressionParser {
 	parser := &ExpressionParser{
 		newAbstractParser(),
-		false
+		false,
 	}
 
 	return parser
@@ -53,7 +53,7 @@ func (parser *ExpressionParser) parseUnaryExpression() (*AbstractParser, error) 
 	foundExpected, err := parser.expectToken(
 		TokenTypeString,
 		TokenTypeLogicalNot,
-		TokenTypeOpenBracket
+		TokenTypeOpenBracket,
 	)
 	if !foundExpected {
 		// I have the error available here (if one), might need to update return type.
@@ -61,11 +61,11 @@ func (parser *ExpressionParser) parseUnaryExpression() (*AbstractParser, error) 
 		return nil, err
 	}
 
-	if TokenTypeLogicalNot == parser.currentToken.type {
+	if TokenTypeLogicalNot == parser.currentToken.TokenType {
 		return parser.parseLogicalNot()
-	} else if TokenTypeOpenBracket == parser.currentToken.type {
+	} else if TokenTypeOpenBracket == parser.currentToken.TokenType {
 		return parser.parseNestedExpression()
-	} else if !strings.Contains(parser.wildcardString(), parser.currentToken.value) {
+	} else if !strings.Contains(parser.wildcardString(), parser.currentToken.Value) {
 		return parser.parseTag(), nil
 	} else {
 		return parser.parsePattern(), nil
@@ -76,7 +76,7 @@ func (parser *ExpressionParser) parseTag() *AbstractExpression {
 	parser.startExpression()
 
 	expression := NewTag(
-		parser.currentToken.value
+		parser.currentToken.Value,
 	)
 
 	parser.nextToken()
@@ -91,7 +91,7 @@ func (parser *ExpressionParser) parsePattern() (*AbstractExpression, error) {
 
 	pattern := "/(" + regex.QuoteMeta(parser.wildcardString()) + ")/"
 	re := regex.MustCompile(pattern)
-	parts := re.Split(parser.currentToken.value, -1)
+	parts := re.Split(parser.currentToken.Value, -1)
 
 	expression := NewPattern()
 
@@ -120,7 +120,7 @@ func (parser *ExpressionParser) parseNestedExpression() (*AbstractExpression, er
 		return nil, err
 	}
 
-	foundExpected, err := parser.expectToken(Token::CLOSE_BRACKET)
+	foundExpected, err := parser.expectToken(TokenTypeCloseBracket)
 	if !foundExpected {
 		// I have the error available here (if one), might need to update return type.
 		// The PHP version is using exceptions for control flow for this...
@@ -144,15 +144,16 @@ func (parser *ExpressionParser) parseLogicalNot() (*AbstractExpression, error) {
 		return nil, err
 	}
 
-	expression := new LogicalNot(expression)
+	expression := NewLogicalNot(expression)
 
 	parser.endExpression(expression)
 
 	return expression, nil
 }
 
-func (parser *ExpressionParser) parseCompoundExpression(leftExpression *ExpressionInterface, minimumPrecedence int) (*AbstractExpression, nil) {
+func (parser *ExpressionParser) parseCompoundExpression(expression *ExpressionInterface, minimumPrecedence int) (*AbstractExpression, nil) {
 	allowCollapse := false
+	leftExpression := expression
 
 	for {
 		// Parse the operator and determine whether or not it's explicit ...
@@ -183,7 +184,7 @@ func (parser *ExpressionParser) parseCompoundExpression(leftExpression *Expressi
 		if precedence < operatorPrecedence(nextOperator) {
 			rightExpression, er = parser.parseCompoundExpression(
 				rightExpression,
-				precedence + 1
+				precedence+1,
 			)
 
 			if err != nil {
@@ -194,17 +195,19 @@ func (parser *ExpressionParser) parseCompoundExpression(leftExpression *Expressi
 		// Combine the parsed expression with the existing expression ...
 		// Collapse the expression into an existing expression of the same type ...
 		if oper == TokenTypeLogicalAnd {
-			if allowCollapse && leftExp, ok := leftExpression.(LogicalAnd); ok {
-				leftExp.add(rightExpression)
+			leftExpression, ok := leftExpression.(LogicalAnd)
+			if allowCollapse && ok {
+				leftExpression.add(rightExpression)
 			} else {
-				leftExpression = LogicalAnd(leftExpression, rightExpression)
+				leftExpression = NewLogicalAnd(leftExpression, rightExpression)
 				allowCollapse = true
 			}
 		} else if oper == TokenTypeLogicalOr {
-			if allowCollapse && leftExp, ok := leftExpression.(LogicalOr) {
-				leftExp.add(rightExpression)
+			leftExpression, ok := leftExpression.(LogicalOr)
+			if allowCollapse && ok {
+				leftExpression.add(rightExpression)
 			} else {
-				leftExpression = LogicalOr(leftExpression, rightExpression)
+				leftExpression = NewLogicalOr(leftExpression, rightExpression)
 				allowCollapse = true
 			}
 		} else {
@@ -217,23 +220,23 @@ func (parser *ExpressionParser) parseCompoundExpression(leftExpression *Expressi
 }
 
 func (parser *ExpressionParser) parseOperator() (oper TokenType, isExplicit bool) {
-	// End of input ...
-	if _currentToken == nil {
+	if currentToken == nil {
+		// End of input ...
 		return nil, false
-	// Closing bracket ...
-	} else if TokenTypeCloseBracket == _currentToken.tokenType {
+	} else if TokenTypeCloseBracket == currentToken.TokenType {
+		// Closing bracket ...
 		return nil, false
-	// Explicit logical OR ...
-	} else if TokenTypeLogicalOr == _currentToken.tokenType {
+	} else if TokenTypeLogicalOr == currentToken.TokenType {
+		// Explicit logical OR ...
 		return TokenTypeLogicalOr, true
-	// Explicit logical AND ...
-	} else if TokenTypeLogicalAnd == _currentToken.tokenType {
+	} else if TokenTypeLogicalAnd == currentToken.TokenType {
+		// Explicit logical AND ...
 		return TokenTypeLogicalAnd, true
-	// Implicit logical OR ...
 	} else if logicalOrByDefault {
+		// Implicit logical OR ...
 		return TokenTypeLogicalOr, false
-	// Implicit logical AND ...
 	} else {
+		// Implicit logical AND ...
 		return TokenTypeLogicalAnd, false
 	}
 }

@@ -5,11 +5,11 @@ import (
 )
 
 type AbstractParser struct {
-    wildcardString string
-	tokenStack []*Token
-	tokens []*Token
-	tokenIndex int
-	previousToken *Token
+	wildcardString string
+	tokenStack     []*Token
+	tokens         []*Token
+	tokenIndex     int
+	previousToken  *Token
 
 	currentToken *Token
 }
@@ -41,7 +41,7 @@ func (parser *AbstractParser) Parse(expression string, lexer *LexerInterface) (*
 	}
 
 	return parser.ParseTokens(
-		lexer.lex(expression)
+		lexer.lex(expression),
 	)
 }
 
@@ -62,8 +62,9 @@ func (parser *AbstractParser) ParseTokens(tokens []*Token) (*ExpressionInterface
 	var expression = parser.parseExpression()
 
 	if parser.currentToken {
-		// TODO: make a ParseError type?
-		return nil, fmt.Errorf("Unexpected %s, expected end of input.", parser.currentToken.TokenType)
+		// TODO: return a ParseError type?
+		// return nil, fmt.Errorf("Unexpected %s, expected end of input.", parser.currentToken.TokenType)
+		return nil, NewParseError(fmt.Sprintf("Unexpected %s, expected end of input.", parser.currentToken.TokenType))
 	}
 
 	return expression, nil
@@ -78,8 +79,9 @@ func (parser *AbstractParser) parseExpression() (*AbstractExpression, error) {
 
 func (parser *AbstractParser) expectToken(types ...TokenType) (bool, error) {
 	if !parser.currentToken {
-		// TODO: make a ParseError type?
-		return false, fmt.Errorf("Unexpected %s, expected %s.", parser.currentToken.TokenType, parser.formatExpectedTokenNames(types))
+		// TODO: return a ParseError type?
+		// return false, fmt.Errorf("Unexpected %s, expected %s.", parser.currentToken.TokenType, parser.formatExpectedTokenNames(types))
+		return false, NewParseError(fmt.Sprintf("Unexpected %s, expected %s.", parser.currentToken.TokenType, parser.formatExpectedTokenNames(types)))
 	} else {
 		for _, tokenType := range types {
 			if tokenType == parser.currentToken.TokenType {
@@ -88,8 +90,9 @@ func (parser *AbstractParser) expectToken(types ...TokenType) (bool, error) {
 		}
 	}
 
-	// TODO: make a ParseError type?
-	return false, fmt.Errorf("Unexpected %s, expected %s.", parser.currentToken.TokenType, parser.formatExpectedTokenNames(types))
+	// TODO: return a ParseError type?
+	// return false, fmt.Errorf("Unexpected %s, expected %s.", parser.currentToken.TokenType, parser.formatExpectedTokenNames(types))
+	return false, NewParseError(fmt.Sprintf("Unexpected %s, expected %s.", parser.currentToken.TokenType, parser.formatExpectedTokenNames(types)))
 }
 
 func (parser *AbstractParser) formatExpectedTokenNames(types ...TokenType) string {
@@ -102,9 +105,9 @@ func (parser *AbstractParser) formatExpectedTokenNames(types ...TokenType) strin
 		return formattedTypes[0]
 	}
 
-	lastType := formattedTypes[len(formattedTypes) - 1]
+	lastType := formattedTypes[len(formattedTypes)-1]
 
-	return strings.Join(formattedTypes[:len(formattedTypes) - 1], ", ") + " or " + lastType;
+	return strings.Join(formattedTypes[:len(formattedTypes)-1], ", ") + " or " + lastType
 }
 
 func (parser *AbstractParser) nextToken() {
@@ -126,11 +129,11 @@ func (parser *AbstractParser) startExpression() {
 // Record the end of an expression.
 func (parser *AbstractParser) endExpression(expression ExpressionInterface) {
 	length := len(parser.tokenStack)
-	lastToken = parser.tokenStack[length - 1]
-	parser.tokenStack = parser.tokenStack[:length - 1]
+	lastToken = parser.tokenStack[length-1]
+	parser.tokenStack = parser.tokenStack[:length-1]
 
 	expression.setTokens(
 		lastToken,
-		parser.previousToken
+		parser.previousToken,
 	)
 }

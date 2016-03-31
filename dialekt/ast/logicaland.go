@@ -5,8 +5,9 @@ type LogicalAnd struct {
 	*AbstractPolyadicExpression
 }
 
-func NewLogicalAnd() *LogicalAnd {
-	return &LogicalAnd{}
+// One or more children to add to this operator.
+func NewLogicalAnd(children ...ExpressionInterface) *LogicalAnd {
+	return &LogicalAnd{NewAbstractPolyadicOperator(children...)}
 }
 
 // Pass this node to the appropriate method on the given visitor.

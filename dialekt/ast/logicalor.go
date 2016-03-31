@@ -5,9 +5,9 @@ type LogicalOr struct {
 	*AbstractPolyadicExpression
 }
 
-// The child expression being inverted by the NOT operator.
-func NewLogicalOr() *LogicalOr {
-	return &LogicalOr{}
+// One or more children to add to this operator.
+func NewLogicalOr(children ...ExpressionInterface) *LogicalOr {
+	return &LogicalOr{NewAbstractPolyadicOperator(children...)}
 }
 
 // Pass this node to the appropriate method on the given visitor.

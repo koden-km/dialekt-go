@@ -5,7 +5,8 @@ const TokenWildcardCharacter = "*"
 type TokenType int
 
 const (
-	TokenTypeLogicalAnd TokenType = 1 = iota
+	_ TokenType = iota
+	TokenTypeLogicalAnd
 	TokenTypeLogicalOr
 	TokenTypeLogicalNot
 	TokenTypeString
@@ -29,7 +30,7 @@ func NewToken(tokenType TokenType, value string, startOffset, endOffset, lineNum
 		startOffset,
 		endOffset,
 		lineNumber,
-		columnNumber
+		columnNumber,
 	}
 }
 
