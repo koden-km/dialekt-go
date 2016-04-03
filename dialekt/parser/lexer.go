@@ -2,6 +2,7 @@ package dialekt
 
 import (
 	"strings"
+	"unicode"
 	// 	"regex"
 )
 
@@ -86,97 +87,92 @@ func (lexer *Lexer) Lex(expression string) (tokens []Token, err *ParseError) {
 	return lexer.tokens, nil
 }
 
-// TODO: Up to here
+func (lexer *Lexer) handleBeginState(char rune) {
+	// TODO: look up what PHP says this checks.
+	// if (ctype_space($char)) {
+	// if char == ' ' {
+	if unicode.IsSpace(char) {
+		// ignore ...
+	} else if char == '(' {
+		lexer.startToken(TokenTypeOpenBracket)
+		lexer.endToken(char)
+	} else if char == ')' {
+		lexer.startToken(TokenTypeCloseBracket)
+		lexer.endToken(char)
+	} else if char == '"' {
+		lexer.startToken(TokenTypeString)
+		lexer.state = StateQuotedString
+	} else {
+		lexer.startToken(TokenTypeString)
+		lexer.state = StateSimpleString
+		lexer.buffer = char
+	}
+}
 
-// private function handleBeginState($char)
-// {
-// 	if (ctype_space($char)) {
-// 		// ignore ...
-// 	} elseif ($char === '(') {
-// 		$this->startToken(Token::OPEN_BRACKET);
-// 		$this->endToken($char);
-// 	} elseif ($char === ')') {
-// 		$this->startToken(Token::CLOSE_BRACKET);
-// 		$this->endToken($char);
-// 	} elseif ($char === '"') {
-// 		$this->startToken(Token::STRING);
-// 		$this->state = self::STATE_QUOTED_STRING;
-// 	} else {
-// 		$this->startToken(Token::STRING);
-// 		$this->state = self::STATE_SIMPLE_STRING;
-// 		$this->buffer = $char;
-// 	}
-// }
+func (lexer *Lexer) handleSimpleStringState(char rune) {
+	// TODO: look up what PHP says this checks.
+	// if (ctype_space($char)) {
+	// if char == ' ' {
+	if unicode.IsSpace(char) {
+		lexer.finalizeSimpleString()
+	} else if char == '(' {
+		lexer.finalizeSimpleString()
+		lexer.startToken(TokenTypeOpenBracket)
+		lexer.endToken(char)
+	} else if char == ')' {
+		lexer.finalizeSimpleString()
+		lexer.startToken(TokenTypeCloseBracket)
+		lexer.endToken(char)
+	} else {
+		lexer.buffer += char
+	}
+}
 
-// private function handleSimpleStringState($char)
-// {
-// 	if (ctype_space($char)) {
-// 		$this->finalizeSimpleString();
-// 	} elseif ($char === '(') {
-// 		$this->finalizeSimpleString();
-// 		$this->startToken(Token::OPEN_BRACKET);
-// 		$this->endToken($char);
-// 	} elseif ($char === ')') {
-// 		$this->finalizeSimpleString();
-// 		$this->startToken(Token::CLOSE_BRACKET);
-// 		$this->endToken($char);
-// 	} else {
-// 		$this->buffer .= $char;
-// 	}
-// }
+func (lexer *Lexer) handleQuotedStringState(char rune) {
+	if char == '\\' {
+		lexer.state = StateQuotedStringEscape
+	} else if char == '"' {
+		lexer.endToken(lexer.buffer)
+		lexer.state = StateBegin
+		lexer.buffer = ""
+	} else {
+		lexer.buffer += char
+	}
+}
 
-// private function handleQuotedStringState($char)
-// {
-// 	if ($char === '\\') {
-// 		$this->state = self::STATE_QUOTED_STRING_ESCAPE;
-// 	} elseif ($char === '"') {
-// 		$this->endToken($this->buffer);
-// 		$this->state = self::STATE_BEGIN;
-// 		$this->buffer = '';
-// 	} else {
-// 		$this->buffer .= $char;
-// 	}
-// }
+func (lexer *Lexer) handleQuotedStringEscapeState(char rune) {
+	lexer.state = StateQuotedString
+	lexer.buffer += char
+}
 
-// private function handleQuotedStringEscapeState($char)
-// {
-// 	$this->state = self::STATE_QUOTED_STRING;
-// 	$this->buffer .= $char;
-// }
+func (lexer *Lexer) finalizeSimpleString() {
+	if strings.Compare("and", lexer.buffer) == 0 {
+		lexer.nextToken.tokenType = TokenTypeLogicalAnd
+	} else if strings.Compare("or", lexer.buffer) == 0 {
+		lexer.nextToken.tokenType = TokenTypeLogicalOr
+	} else if strings.Compare("not", lexer.buffer) == 0 {
+		lexer.nextToken.tokenType = TokenTypeLogicalNot
+	}
 
-// private function finalizeSimpleString()
-// {
-// 	if (strcasecmp('and', $this->buffer) === 0) {
-// 		$this->nextToken->type = Token::LOGICAL_AND;
-// 	} elseif (strcasecmp('or', $this->buffer) === 0) {
-// 		$this->nextToken->type = Token::LOGICAL_OR;
-// 	} elseif (strcasecmp('not', $this->buffer) === 0) {
-// 		$this->nextToken->type = Token::LOGICAL_NOT;
-// 	}
+	lexer.endToken(lexer.buffer, -1)
+	lexer.state = StateBegin
+	lexer.buffer = ""
+}
 
-// 	$this->endToken($this->buffer, -1);
-// 	$this->state = self::STATE_BEGIN;
-// 	$this->buffer = '';
-// }
+func (lexer *Lexer) startToken(tokeType TokenType) {
+	lexer.nextToken = NewToken(
+		tokenType,
+		"",
+		lexer.currentOffset,
+		0,
+		lexer.currentLine,
+		lexer.currentColumn,
+	)
+}
 
-// private function startToken($type)
-// {
-// 	$this->nextToken = new Token(
-// 		$type,
-// 		'',
-// 		$this->currentOffset,
-// 		0,
-// 		$this->currentLine,
-// 		$this->currentColumn
-// 	);
-// }
-
-// private function endToken($value, $lengthAdjustment = 0)
-// {
-// 	$this->nextToken->value = $value;
-// 	$this->nextToken->endOffset = $this->currentOffset
-// 								+ $lengthAdjustment
-// 								+ 1;
-// 	$this->tokens[] = $this->nextToken;
-// 	$this->nextToken = null;
-// }
+func (lexer *Lexer) endToken(value string, lengthAdjustment int) {
+	lexer.nextToken.Value = value
+	lexer.nextToken.EndOffset = lexer.currentOffset + lengthAdjustment + 1
+	lexer.tokens = append(lexer.tokens, lexer.nextToken)
+	lexer.nextToken = nil
+}
